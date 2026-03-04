@@ -1,0 +1,8 @@
+{
+  "name": "EportalStream",
+  "description": "Ứng dụng gọi livestream kết nối doanh nghiệp và người lao động.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

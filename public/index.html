@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EportalStream</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Fallback for icons if script fails or loads late */
+        .icon { width: 24px; height: 24px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i data-lucide="video"></i>
+                </div>
+                <span>EportalStream</span>
+            </div>
+            <button id="exit-btn" class="hidden">Thoát</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Step 1: Role Selection -->
+        <div id="step-role" class="step-container active">
+            <div class="hero-text">
+                <h1>Kết nối tức thì.<br><span class="highlight">Phỏng vấn mọi nơi.</span></h1>
+                <p>Phỏng vấn trực tuyến chất lượng cao dành cho doanh nghiệp và người lao động. Không cần cài đặt.</p>
+            </div>
+
+            <div class="role-cards">
+                <div class="card role-card" onclick="app.selectRole('business')">
+                    <div class="card-icon business-icon">
+                        <i data-lucide="briefcase"></i>
+                    </div>
+                    <h3>Doanh nghiệp</h3>
+                    <p>Tạo phòng phỏng vấn và mời ứng viên tham gia qua mã phòng.</p>
+                    <div class="action-text business-text">
+                        Tạo phòng <i data-lucide="arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="card role-card" onclick="app.selectRole('worker')">
+                    <div class="card-icon worker-icon">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <h3>Người lao động</h3>
+                    <p>Tham gia phỏng vấn bằng mã phòng được cung cấp.</p>
+                    <div class="action-text worker-text">
+                        Tham gia <i data-lucide="arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Lobby -->
+        <div id="step-lobby" class="step-container hidden">
+            <div class="card lobby-card">
+                <div class="lobby-header">
+                    <div id="lobby-icon" class="lobby-icon-wrapper"></div>
+                    <h2 id="lobby-title"></h2>
+                    <p id="lobby-desc"></p>
+                </div>
+
+                <!-- Business Lobby -->
+                <div id="business-lobby" class="hidden">
+                    <div class="code-display">
+                        <label>MÃ PHÒNG CỦA BẠN</label>
+                        <div class="code-box">
+                            <span id="generated-code"></span>
+                            <button onclick="app.copyCode()" title="Sao chép">
+                                <i data-lucide="copy"></i>
+                            </button>
+                        </div>
+                        <p class="hint">Chia sẻ mã này cho ứng viên để kết nối.</p>
+                    </div>
+                    <button class="btn btn-primary full-width" onclick="app.startRoom()">Mở phòng & Chờ</button>
+                </div>
+
+                <!-- Worker Lobby -->
+                <div id="worker-lobby" class="hidden">
+                    <div class="input-group">
+                        <label>Nhập mã phòng</label>
+                        <input type="text" id="room-code-input" placeholder="VD: X7Y2Z9" maxlength="6" oninput="this.value = this.value.toUpperCase()">
+                    </div>
+                    <button class="btn btn-success full-width" onclick="app.joinRoom()">Tham gia phỏng vấn</button>
+                </div>
+            </div>
+            <div class="back-link">
+                <a href="#" onclick="app.resetToRole()">← Quay lại chọn vai trò</a>
+            </div>
+        </div>
+
+        <!-- Step 3: Call Room -->
+        <div id="step-call" class="step-container hidden full-height">
+            <div class="call-grid">
+                <div class="video-area">
+                    <video id="remote-video" autoplay playsinline></video>
+                    <div id="connection-status" class="status-overlay">
+                        <div class="spinner"></div>
+                        <p id="status-text">Đang kết nối...</p>
+                        <p id="room-info" class="small-text"></p>
+                    </div>
+                    <div class="local-video-wrapper">
+                        <video id="local-video" autoplay playsinline muted></video>
+                    </div>
+                </div>
+
+                <div class="controls-sidebar">
+                    <div class="card control-card">
+                        <div class="status-header">
+                            <h3>Đang phỏng vấn</h3>
+                            <div class="live-indicator">
+                                <span class="dot"></span> Kết nối trực tiếp
+                            </div>
+                        </div>
+
+                        <div class="room-info-box">
+                            <label>MÃ PHÒNG</label>
+                            <div class="room-code-row">
+                                <code id="active-room-code"></code>
+                                <button onclick="app.copyActiveCode()">
+                                    <i data-lucide="copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="control-buttons">
+                            <button id="btn-mute" class="btn btn-secondary" onclick="app.toggleMute()">
+                                <i data-lucide="mic"></i> <span>Tắt Mic</span>
+                            </button>
+                            <button id="btn-video" class="btn btn-secondary" onclick="app.toggleVideo()">
+                                <i data-lucide="video"></i> <span>Tắt Camera</span>
+                            </button>
+                            <button class="btn btn-danger full-width" onclick="app.endCall()">
+                                <i data-lucide="phone-off"></i> Kết thúc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="client.js"></script>
+</body>
+</html>
