@@ -92,7 +92,7 @@
                 </div>
             </div>
             <div class="back-link">
-                <a href="#" onclick="app.resetToRole()">← Quay lại chọn vai trò</a>
+                <a href="#" onclick="event.preventDefault(); app.confirmResetToRole()">← Quay lại chọn vai trò</a>
             </div>
         </div>
 
@@ -137,7 +137,7 @@
                             <button id="btn-video" class="btn btn-secondary" onclick="app.toggleVideo()">
                                 <i data-lucide="video"></i> <span>Tắt Camera</span>
                             </button>
-                            <button class="btn btn-danger full-width" onclick="app.endCall()">
+                            <button class="btn btn-danger full-width" onclick="app.confirmEndCall()">
                                 <i data-lucide="phone-off"></i> Kết thúc
                             </button>
                         </div>

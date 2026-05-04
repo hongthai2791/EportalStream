@@ -66,7 +66,7 @@ const app = {
         document.getElementById('step-role').classList.add('hidden');
         document.getElementById('step-lobby').classList.remove('hidden');
         document.getElementById('exit-btn').classList.remove('hidden');
-        document.getElementById('exit-btn').onclick = () => this.resetToRole();
+        document.getElementById('exit-btn').onclick = () => this.confirmResetToRole();
 
         const title = document.getElementById('lobby-title');
         const desc = document.getElementById('lobby-desc');
@@ -133,7 +133,7 @@ const app = {
         document.getElementById('step-call').classList.remove('hidden');
         document.getElementById('active-room-code').textContent = this.roomId;
         document.getElementById('room-info').textContent = `Phòng: ${this.roomId}`;
-        document.getElementById('exit-btn').onclick = () => this.endCall();
+        document.getElementById('exit-btn').onclick = () => this.confirmEndCall();
         
         // Join Socket Room
         this.socket.emit('join-room', this.roomId, this.socket.id);
@@ -144,6 +144,11 @@ const app = {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             this.localStream = stream;
             document.getElementById('local-video').srcObject = stream;
+
+            // Tự động tắt tiếng micro khi mới vào phòng
+            this.isMuted = false;
+            this.toggleMute();
+
             return true;
         } catch (err) {
             console.error(err);
@@ -191,6 +196,22 @@ const app = {
         }
         
         return this.peer;
+    },
+
+    confirmEndCall: function() {
+        if (confirm("Bạn có chắc chắn muốn ngắt kết nối và kết thúc cuộc gọi hiện tại không?")) {
+            this.endCall();
+        }
+    },
+
+    confirmResetToRole: function() {
+        if (this.roomId || this.peer) {
+            if (confirm("Bạn có chắc chắn muốn thoát phòng hiện tại không?")) {
+                this.resetToRole();
+            }
+        } else {
+            this.resetToRole();
+        }
     },
 
     endCall: function(remoteOnly = false) {
@@ -265,3 +286,11 @@ const app = {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => app.init());
+
+// Ngăn người dùng vô tình đóng tab/trình duyệt khi đang trong phòng
+window.addEventListener('beforeunload', function (e) {
+    if (app.roomId || app.peer) {
+        e.preventDefault();
+        e.returnValue = ''; // Bắt buộc đối với hầu hết các trình duyệt để hiển thị hộp thoại
+    }
+});
